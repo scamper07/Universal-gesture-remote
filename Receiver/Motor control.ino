@@ -1,21 +1,18 @@
-#include <IRremote.h> // IR remote library
+#include <IRremote.h>             // IR remote library
 
 // Motor pins
 int motorVar=8;
 int motorFix=7;
 
-// H-bridge enable pin
-int enable = 2;
-
-// IR receiver pin
-int RECV_PIN = 11;
-
+int enable = 2;                   // H-bridge enable pin
+int RECV_PIN = 11;                // IR receiver pin
 boolean ctrl=false;
 IRrecv irrecv(RECV_PIN);
-
 int state=0;
 decode_results results;
-int speeed=500; // initial speed of motor
+int speeed=500;                   // initial speed of motor
+
+
 void setup()
 {
   pinMode(7,OUTPUT);
@@ -24,8 +21,8 @@ void setup()
   Serial.begin(9600);
   digitalWrite(7,LOW);
   digitalWrite(enable,HIGH);
-  irrecv.enableIRIn(); // Start the receiver
-}
+  irrecv.enableIRIn();            // Start the receiver
+} 
 
 void loop()
 { 
@@ -33,12 +30,12 @@ void loop()
   if (irrecv.decode(&results))
   {
     Serial.println(results.value, HEX);
-    if(results.value==2707)
+    if(results.value==2707)       //IR code to switch ON motor
     {
       state=1;
     }
       
-    else if(results.value==2704)
+    else if(results.value==2704)  //IR code to switch ON motor
     {
       state=2;
     }
@@ -47,18 +44,18 @@ void loop()
     else if(results.value==1168 && ctrl==true && speeed<=900)
     {
       state=3;
-      speeed+=10; // Increase speed of motor
+      speeed+=10;                 // Increase speed of motor
     }
       
     else if(results.value==3216 && ctrl==true && speeed>=600)
     {
       state=4;
-      speeed-=10; // Decrease speed of motor
+      speeed-=10;                // Decrease speed of motor
     }
       
     
    
-    irrecv.resume(); // Receive the next value
+    irrecv.resume();             // Receive the next value
   }
   
   if(state==1)
