@@ -7,9 +7,12 @@ int motorFix=7;
 int enable = 2;                   // H-bridge enable pin
 int RECV_PIN = 11;                // IR receiver pin
 boolean ctrl=false;
-IRrecv irrecv(RECV_PIN);
 int state=0;
+
+IRrecv irrecv(RECV_PIN);
+
 decode_results results;
+
 int speeed=500;                   // initial speed of motor
 
 
@@ -35,7 +38,7 @@ void loop()
       state=1;
     }
       
-    else if(results.value==2704)  //IR code to switch ON motor
+    else if(results.value==2704)  //IR code to switch OFF motor
     {
       state=2;
     }
