@@ -1,4 +1,4 @@
-#include <IRremote.h>
+#include <IRremote.h>                        //IR remote library
 
 IRsend irsend;
 
@@ -10,10 +10,10 @@ int reference = 0;
 int sum=0;
 int led=13;
 
+//Accelerometer
+
 float acclReference = 0;
 float acclNew = 0;
-
-//Accelerometer
 
 /* 
  Hardware setup:
@@ -26,20 +26,20 @@ float acclNew = 0;
  GND ---------------------- GND
  
  SDA and SCL should have external pull-up (10k) resistors (to 3.3V).
-  resistors worked for me. They should be on the breakout
- board.
+ They should be on the breakout board.
  
  Note: The MMA8452 is an I2C sensor, however this code does
  not make use of the Arduino Wire library. Because the sensor
  is not 5V tolerant, we can't use the internal pull-ups used
  by the Wire library. Instead use the included i2c.h, defs.h and types.h files.
  */
+ 
 #include "i2c.h"  
 
 
 #define SA0 1
 #if SA0
-#define MMA8452_ADDRESS 0x1D  // SA0 is high, 0x1C if low
+#define MMA8452_ADDRESS 0x1D                  // SA0 is high, 0x1C if low
 #else
 #define MMA8452_ADDRESS 0x1C
 #endif
@@ -50,11 +50,11 @@ const byte SCALE = 2;  // Sets full-scale range to +/-2, 4, or 8g. Used to calc 
 const byte dataRate = 0;  // 0=800Hz, 1=400, 2=200, 3=100, 4=50, 5=12.5, 6=6.25, 7=1.56
 
 // Pin definitions
-int int1Pin = 2;  // These can be changed, 2 and 3 are the Arduinos ext int pins
+int int1Pin = 2;                              // These can be changed, 2 and 3 are the Arduinos ext int pins
 int int2Pin = 3;
 
-int accelCount[3];  // Stores the 12-bit signed value
-float accelG[3];  // Stores the real accel value in g's
+int accelCount[3];                            // Stores the 12-bit signed value
+float accelG[3];                              // Stores the real accel value in g's
 
 int acclNew_z=0;
 int acclState=0;
@@ -63,15 +63,17 @@ int acclNew_y=0;
 
 void setup()
 {
-  Serial.begin(57600); //initialize serial port
+  Serial.begin(57600);                        //initialize serial port
   pinMode(force,INPUT);
-  for (int i=0;i<20;i++)
+  
+  for (int i=0;i<20;i++)                      //calibrate the force sensor
   {
     val=analogRead(force);
     sum+=val;
   }
   reference=sum/20;
   Serial.println(" Calibration done ... ");
+  
   //Accelerometer
   byte c;
 
@@ -89,23 +91,24 @@ void setup()
   c = readRegister(0x0D);  // Read WHO_AM_I register
   if (c == 0x2A) // WHO_AM_I should always be 0x2A
   {  
-    initMMA8452(SCALE, dataRate);  // init the accelerometer if communication is OK
+    initMMA8452(SCALE, dataRate);             // init the accelerometer if communication is OK
     Serial.println("MMA8452Q is online...");
   }
   else
   {
     Serial.print("Could not connect to MMA8452Q: 0x");
     Serial.println(c, HEX);
-    while(1) ; // Loop forever if communication doesn't happen
+    while(1) ;                               // Loop forever if communication doesn't happen
   }
     
 }
+
 
 void loop()
 {
    static byte source;
   
-   if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
+   if (digitalRead(int1Pin)==1)             // Interrupt pin, should probably attach to interrupt function
    {
     readAccelData(accelCount);
     for (int i=0; i<3; i++)
@@ -113,29 +116,31 @@ void loop()
     acclNew = accelG[1]+1.0;
    }
   
-  while(acclNew >= 0.6 && acclNew <= 1.3){
-  
-  val = analogRead(force);
-  //Serial.println(val);
-  //delay(500);
-  if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3)){
-  Serial.println("Hand in normal position");
-  digitalWrite(led,LOW);
-  if(state == 2)
+  while(acclNew >= 0.6 && acclNew <= 1.3)
   {
-    for(int i=0; i<3; i++){
-  irsend.sendSony(0xa93,12); // turn off device
-  delay(40);
-  }
-  Serial.println("code a93 sent");
-  }
-   state = 1;
+   val = analogRead(force);
+   //Serial.println(val);
+   //delay(500);
+   if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
+   {
+     Serial.println("Hand in normal position");
+     digitalWrite(led,LOW);
+     if(state == 2)
+     {
+       for(int i=0; i<3; i++)
+       {
+         irsend.sendSony(0xa93,12);         // switch off device
+         delay(40);
+       }
+       Serial.println("code a93 sent");
+     }
+     state = 1;
   }
  
   if(val<(reference-90) && (state == 0 ||state== 1 || state==3)) {
   Serial.println("Hand is closed");
   digitalWrite(led,HIGH);
-  if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
+  if (digitalRead(int1Pin)==1)             // Interrupt pin, should probably attach to interrupt function
   {
     
     if(state == 1 || state == 3)
@@ -155,20 +160,23 @@ void loop()
   state = 2;
   }
   
-  if(val>(reference+95) && (state == 0 || state==1 || state==2)) {
-  Serial.println("Hand is open");
-  digitalWrite(led,LOW);
-  if(state==1){
-  for(int i=0; i<1; i++){  
-  irsend.sendSony(0xa90,12); // switch on device
-  delay(40);
-  }
-  Serial.println("code a90 sent");
-  }
-  state = 3;
+  if(val>(reference+95) && (state == 0 || state==1 || state==2))
+  {
+    Serial.println("Hand is open");
+    digitalWrite(led,LOW);
+    if(state==1)
+    {
+      for(int i=0; i<1; i++)
+      {  
+        irsend.sendSony(0xa90,12);         // switch on device
+        delay(40);
+      }
+      Serial.println("code a90 sent");
+    }
+    state = 3;
   }
   
-  if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
+  if (digitalRead(int1Pin)==1)            // Interrupt pin, should probably attach to interrupt function
   {
     readAccelData(accelCount);
     for (int i=0; i<3; i++)
