@@ -1,23 +1,22 @@
-#include <IRremote.h>  //IR remote library
+#include <IRremote.h>                      //IR remote library
 
 IRsend irsend;
 
-int val = 0; // value read by force sensor 
-int force = A1; // force sensor connected to analog pin #1
+int val = 0;                               // value read by force sensor 
+int force = A1;                            // force sensor connected to analog pin #1
+
 // control variables
 boolean control = false;
 int state = 0;
 
-int reference = 0; // Stores the reference value after calibrating the wrist band to the user's hand
+int reference = 0;                         // Stores the reference value after calibrating the wrist band to the user's hand
 int sum=0;
 
-int led=13; // indicator led
+int led=13;                                // indicator led
 
 // accelerometer data
 float acclReference = 0;
 float acclNew = 0;
-
-//Accelerometer
 
 /* 
  
@@ -38,12 +37,12 @@ float acclNew = 0;
  is not 5V tolerant, we can't use the internal pull-ups used
  by the Wire library. Instead use the i2c.h, defs.h and types.h files.
  */
+ 
 #include "i2c.h"  
-
 
 #define SA0 1
 #if SA0
-#define MMA8452_ADDRESS 0x1D  // SA0 is high, 0x1C if low
+#define MMA8452_ADDRESS 0x1D               //SA0 is high, 0x1C if low
 #else
 #define MMA8452_ADDRESS 0x1C
 #endif
@@ -54,11 +53,11 @@ const byte SCALE = 2;  // Sets full-scale range to +/-2, 4, or 8g. Used to calc 
 const byte dataRate = 0;  // 0=800Hz, 1=400, 2=200, 3=100, 4=50, 5=12.5, 6=6.25, 7=1.56
 
 // Pin definitions
-int int1Pin = 2;  // These can be changed, 2 and 3 are the Arduinos ext int pins
-int int2Pin = 3;
+int int1Pin = 2;                           // These can be changed, 2 and 3 are the Arduinos ext int pins
+int int2Pin = 3;  
 
-int accelCount[3];  // Stores the 12-bit signed value
-float accelG[3];  // Stores the real accel value in g's
+int accelCount[3];                         // Stores the 12-bit signed value
+float accelG[3];                           // Stores the real accel value in g's
 
 int acclNew_z=0;
 int acclState=0;
@@ -67,7 +66,7 @@ int acclNew_y=0;
 
 void setup()
 {
-  Serial.begin(57600); // Serial communication initialization
+  Serial.begin(57600);                     // Serial communication initialization
   
   pinMode(force,INPUT);
   
@@ -113,9 +112,7 @@ void setup()
 void loop()
 {
    static byte source;
-  
    
-  
    if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
    {
     readAccelData(accelCount);
@@ -126,48 +123,53 @@ void loop()
    
    // gesture recognition by force sensor
   
-   while(acclNew >= 0.6 && acclNew <= 1.3){
-  
-   val = analogRead(force); 
-   if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3)){
-   Serial.println("Hand in normal position");
-   digitalWrite(led,LOW);
-   if(state == 2 && control == false)
+   while(acclNew >= 0.6 && acclNew <= 1.3)
    {
-     for(int i=0; i<10; i++){
-     irsend.sendSony(0xa93,12); // turn off device
-     delay(40);
-   }
-  Serial.println("code a93 sent");
-   }
-   state = 1;
-  }
+     val = analogRead(force); 
+     if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
+     {
+       Serial.println("Hand in normal position");
+       digitalWrite(led,LOW);
+       if(state == 2 && control == false)
+       {
+         for(int i=0; i<10; i++)
+         {
+           irsend.sendSony(0xa93,12);          //switch off device
+           delay(40);
+         }
+         Serial.println("code a93 sent");
+       } 
+       state = 1;
+     }
  
-  if(val<(reference-90) && (state == 0 ||state== 1 || state==3)) {
-  Serial.println("Hand is closed");
-  digitalWrite(led,HIGH);
-  if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
+  if(val<(reference-90) && (state == 0 ||state== 1 || state==3))
   {
-    readAccelData(accelCount);
-    for (int i=0; i<3; i++)
-      accelG[i] = (float) accelCount[i]/((1<<12)/(2*SCALE));
-    acclReference = accelG[1] + 1.0;
+    Serial.println("Hand is closed");
+    digitalWrite(led,HIGH);
+    if (digitalRead(int1Pin)==1)               // Interrupt pin, should probably attach to interrupt function
+    {
+      readAccelData(accelCount);
+      for (int i=0; i<3; i++)
+        accelG[i] = (float) accelCount[i]/((1<<12)/(2*SCALE));
+      acclReference = accelG[1] + 1.0;
     
-  }
-    
-  state = 2;
+    }
+    state = 2;
   }
   
-  if(val>(reference+95) && (state == 0 || state==1 || state==2)) {
-  Serial.println("Hand is open");
-  digitalWrite(led,LOW);
-  if(state==1){
-  for(int i=0; i<3; i++){  
-  irsend.sendSony(0xa90,12); // switch on device
-  delay(40);
-  }
-  Serial.println("code a90 sent");
-  }
+  if(val>(reference+95) && (state == 0 || state==1 || state==2))
+  {
+    Serial.println("Hand is open");
+    digitalWrite(led,LOW);
+    if(state==1)
+    {
+      for(int i=0; i<3; i++)
+      {  
+        irsend.sendSony(0xa90,12);              // switch on device
+        delay(40);
+      }
+      Serial.println("code a90 sent");
+    }
   state = 3;
   }
   
@@ -190,11 +192,13 @@ void loop()
         
       if ( acclNew_z < 850) 
       {
-        if(acclState==0){
+        if(acclState==0)
+        {
           acclState=2;
         }
         
-        else if(acclState==1){
+        else if(acclState==1)
+        {
           acclState=12;
         }
         control=true;
@@ -202,22 +206,26 @@ void loop()
       }
       if(acclNew_z >1600 )
       {
-        if(acclState==0){
+        if(acclState==0)
+        {
           acclState=1;
         }
-        else if(acclState==2){
+        else if(acclState==2)
+        {
           acclState=21;
         }
       }
       
-      if(acclState==21){
+      if(acclState==21)
+      {
         Serial.println("Next");
         acclState=0;
         delay(150);
         irsend.sendRC6(0xc00020,24);
         delay(750);
       }
-      if(acclState==12){
+      if(acclState==12)
+      {
         Serial.println("Previous");
         acclState=0;
         delay(50);
@@ -231,9 +239,11 @@ void loop()
   
   // wrist rotation detection by accelerometer
     
-  while(state==2 && accelCount[1]>-600 && accelCount[1]<-400){
+  while(state==2 && accelCount[1]>-600 && accelCount[1]<-400)
+  {
       digitalWrite(led,LOW);
-      for(int i=0; i<3; i++){  
+      for(int i=0; i<3; i++)
+      {  
       irsend.sendSony(0x490,12);
       delay(40);
       }
@@ -244,14 +254,16 @@ void loop()
       
       val = analogRead(force);
 
-      if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3)){
+      if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
+      {
         Serial.println("Hand in normal position");
         digitalWrite(led,LOW);
         state = 1;
         break;
       }
       
-      if(val>(reference+95) && (state == 0 || state==1 || state==2)) {
+      if(val>(reference+95) && (state == 0 || state==1 || state==2)) 
+      {
         Serial.println("Hand is open");
         digitalWrite(led,LOW);
         state = 3;
@@ -261,7 +273,8 @@ void loop()
       readAccelData(accelCount);
       }
   
-  while(state==2 && accelCount[1]>250 && accelCount[1]<450){
+  while(state==2 && accelCount[1]>250 && accelCount[1]<450)
+  {
       digitalWrite(led,LOW);
       for(int i=0; i<3; i++){
       irsend.sendSony(0xc90,12);
