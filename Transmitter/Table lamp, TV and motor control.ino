@@ -11,6 +11,7 @@ int state = 0;
 
 int reference = 0;                         // Stores the reference value after calibrating the wrist band to the user's hand
 int sum=0;
+int alpha = 0.4;
 
 int led=13;                                // indicator led
 
@@ -126,7 +127,7 @@ void loop()
    while(acclNew >= 0.6 && acclNew <= 1.3)
    {
      val = analogRead(force); 
-     reference = 0.6*reference + 0.4*val;
+     reference = (1-alpha)*reference + alpha*val;
      if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
      {
        Serial.println("Hand in normal position");
