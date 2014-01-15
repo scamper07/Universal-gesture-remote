@@ -114,6 +114,9 @@ void loop()
 {
    static byte source;
    
+   val = analogRead(force); 
+   reference = (1-alpha)*reference + alpha*val;
+   
    if (digitalRead(int1Pin)==1)  // Interrupt pin, should probably attach to interrupt function
    {
     readAccelData(accelCount);
@@ -126,8 +129,6 @@ void loop()
   
    while(acclNew >= 0.6 && acclNew <= 1.3)
    {
-     val = analogRead(force); 
-     reference = (1-alpha)*reference + alpha*val;
      if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
      {
        Serial.println("Hand in normal position");
