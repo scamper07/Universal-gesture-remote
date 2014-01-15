@@ -126,6 +126,7 @@ void loop()
    while(acclNew >= 0.6 && acclNew <= 1.3)
    {
      val = analogRead(force); 
+     reference = 0.6*reference + 0.4*val;
      if(val >(reference-45) && val < (reference+45) && (state == 0 ||state== 2 ||state== 3))
      {
        Serial.println("Hand in normal position");
